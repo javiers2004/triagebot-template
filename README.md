@@ -94,8 +94,8 @@ Los detalles obligatorios están en:
 5. Si Claude propone una dependencia, verificad que existe antes de instalarla.
 6. Los tests son la red de seguridad.
 
-## Equipo
+## Equipo 5
 
-Nombres:
+Nombres: Javier Santamaría
 
-Metodología: `Vibe` / `Spec-Driven`
+Metodología: `Vibe` 
