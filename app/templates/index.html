@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>TriageBot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+  <h1 class="text-3xl font-bold mb-8">TriageBot</h1>
+
+  <section class="bg-white rounded shadow p-6 mb-8 max-w-lg">
+    <h2 class="text-lg font-semibold mb-4">Nuevo ticket</h2>
+    <form id="ticket-form" method="post" action="/tickets">
+      <input name="title" placeholder="Título" required
+             class="block w-full border rounded p-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <textarea name="description" placeholder="Descripción" required rows="4"
+                class="block w-full border rounded p-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+      <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium">
+        Crear
+      </button>
+    </form>
+  </section>
+
+  <section class="bg-white rounded shadow p-6 max-w-5xl">
+    <h2 class="text-lg font-semibold mb-4">Tickets</h2>
+
+    <form class="flex gap-3 mb-4" method="get" action="/">
+      <select name="category" class="border rounded p-2">
+        <option value="">Categoría</option>
+        <option value="bug" {% if filters.category == 'bug' %}selected{% endif %}>Bug</option>
+        <option value="feature_request" {% if filters.category == 'feature_request' %}selected{% endif %}>Feature</option>
+        <option value="question" {% if filters.category == 'question' %}selected{% endif %}>Pregunta</option>
+        <option value="urgent" {% if filters.category == 'urgent' %}selected{% endif %}>Urgente</option>
+      </select>
+      <select name="priority" class="border rounded p-2">
+        <option value="">Prioridad</option>
+        <option value="P1" {% if filters.priority == 'P1' %}selected{% endif %}>P1</option>
+        <option value="P2" {% if filters.priority == 'P2' %}selected{% endif %}>P2</option>
+        <option value="P3" {% if filters.priority == 'P3' %}selected{% endif %}>P3</option>
+      </select>
+      <select name="status" class="border rounded p-2">
+        <option value="">Estado</option>
+        <option value="open" {% if filters.status == 'open' %}selected{% endif %}>Abierto</option>
+        <option value="in_progress" {% if filters.status == 'in_progress' %}selected{% endif %}>En progreso</option>
+        <option value="closed" {% if filters.status == 'closed' %}selected{% endif %}>Cerrado</option>
+      </select>
+      <button type="submit" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded">Filtrar</button>
+    </form>
+
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+        <tr>
+          <th class="px-3 py-2">#</th>
+          <th class="px-3 py-2">Título</th>
+          <th class="px-3 py-2">Categoría</th>
+          <th class="px-3 py-2">Prioridad</th>
+          <th class="px-3 py-2">Estado</th>
+          <th class="px-3 py-2">Tags</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr class="border-t hover:bg-gray-50">
+          <td class="px-3 py-2 text-gray-400">{{ ticket.id }}</td>
+          <td class="px-3 py-2 font-medium">{{ ticket.title }}</td>
+          <td class="px-3 py-2">{{ ticket.category }}</td>
+          <td class="px-3 py-2">{{ ticket.priority }}</td>
+          <td class="px-3 py-2">{{ ticket.status }}</td>
+          <td class="px-3 py-2 text-gray-500">{{ ticket.tags | join(', ') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="px-3 py-4 text-center text-gray-400">No hay tickets.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</body>
+</html>
