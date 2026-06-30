@@ -79,8 +79,8 @@ def create_ticket(
             )
             conn.commit()
             ticket_id = cursor.lastrowid
-    except sqlite3.IntegrityError:
-        raise DuplicateTicketError(f"A ticket with this title and description already exists")
+    except sqlite3.IntegrityError as err:
+        raise DuplicateTicketError("A ticket with this title and description already exists") from err
     return get_ticket(ticket_id)
 
 

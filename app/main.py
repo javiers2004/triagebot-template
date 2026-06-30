@@ -50,8 +50,8 @@ def create_ticket(payload: TicketCreate):
             priority=classification["priority"],
             tags=classification["tags"],
         )
-    except db.DuplicateTicketError:
-        raise HTTPException(status_code=409, detail="A ticket with this title and description already exists")
+    except db.DuplicateTicketError as err:
+        raise HTTPException(status_code=409, detail="A ticket with this title and description already exists") from err
     return ticket
 
 
