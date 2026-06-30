@@ -444,6 +444,7 @@ def test_stats_empty_db(client):
     r = client.get("/tickets/stats")
     assert r.status_code == 200
     data = r.json()
+    assert data["total"] == 0
     assert data["by_category"] == {"bug": 0, "feature_request": 0, "question": 0, "urgent": 0}
     assert data["by_priority"] == {"P1": 0, "P2": 0, "P3": 0}
     assert data["by_status"] == {"open": 0, "in_progress": 0, "resolved": 0, "closed": 0}

@@ -160,11 +160,13 @@ def update_ticket(
 
 def get_stats() -> dict:
     with get_connection() as conn:
+        total = conn.execute("SELECT COUNT(*) FROM tickets").fetchone()[0]
         by_category = dict(conn.execute("SELECT category, COUNT(*) FROM tickets GROUP BY category").fetchall())
         by_priority = dict(conn.execute("SELECT priority, COUNT(*) FROM tickets GROUP BY priority").fetchall())
         by_status = dict(conn.execute("SELECT status, COUNT(*) FROM tickets GROUP BY status").fetchall())
 
     return {
+        "total": total,
         "by_category": {k: by_category.get(k, 0) for k in ("bug", "feature_request", "question", "urgent")},
         "by_priority": {k: by_priority.get(k, 0) for k in ("P1", "P2", "P3")},
         "by_status": {k: by_status.get(k, 0) for k in ("open", "in_progress", "resolved", "closed")},
