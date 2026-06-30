@@ -1,8 +1,7 @@
 import json
 import os
 import sqlite3
-from datetime import datetime, timezone
-
+from datetime import UTC, datetime
 
 _initialized: set[str] = set()
 
@@ -38,14 +37,14 @@ def get_connection() -> sqlite3.Connection:
 
 
 def init_db() -> None:
-    with get_connection() as conn:
+    with get_connection():
         pass
 
 
 def create_ticket(
     title: str, description: str, category: str, priority: str, tags: list[str]
 ) -> dict:
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     with get_connection() as conn:
         cursor = conn.execute(
             """INSERT INTO tickets
@@ -108,7 +107,7 @@ def update_ticket(
     if not updates:
         return get_ticket(ticket_id)
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     updates.append("updated_at = ?")
     params.append(now)
     params.append(ticket_id)

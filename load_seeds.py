@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).parent))
-from app import db
+from app import db  # noqa: E402
 
 src = Path("seed_results.json")
 if not src.exists():

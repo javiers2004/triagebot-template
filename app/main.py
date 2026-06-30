@@ -1,8 +1,4 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -11,9 +7,12 @@ load_dotenv()
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
+from fastapi.templating import Jinja2Templates
 
 from app import classifier, db
 from app.models import TicketCreate, TicketResponse, TicketUpdate
+
+load_dotenv()
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -54,9 +53,9 @@ def create_ticket(payload: TicketCreate):
 
 @app.get("/tickets", response_model=list[TicketResponse])
 def list_tickets(
-    category: Optional[str] = None,
-    priority: Optional[str] = None,
-    status: Optional[str] = None,
+    category: str | None = None,
+    priority: str | None = None,
+    status: str | None = None,
 ):
     return db.list_tickets(category=category, priority=priority, status=status)
 
@@ -72,9 +71,9 @@ def update_ticket(ticket_id: int, payload: TicketUpdate):
 @app.get("/")
 def index(
     request: Request,
-    category: Optional[str] = None,
-    priority: Optional[str] = None,
-    status: Optional[str] = None,
+    category: str | None = None,
+    priority: str | None = None,
+    status: str | None = None,
 ):
     tickets = db.list_tickets(category=category or None, priority=priority or None, status=status or None)
     return templates.TemplateResponse(
