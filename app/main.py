@@ -64,6 +64,20 @@ def update_ticket(ticket_id: int, payload: TicketUpdate):
     return ticket
 
 
+@app.get("/partials/tickets")
+def tickets_partial(
+    request: Request,
+    category: str | None = None,
+    priority: str | None = None,
+    status: str | None = None,
+):
+    tickets = db.list_tickets(category=category or None, priority=priority or None, status=status or None)
+    return templates.TemplateResponse(
+        "partials/tickets.html",
+        {"request": request, "tickets": tickets},
+    )
+
+
 @app.get("/")
 def index(
     request: Request,
