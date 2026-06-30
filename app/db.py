@@ -84,6 +84,7 @@ def list_tickets(
     priority: str | None = None,
     status: str | None = None,
     overdue: bool = False,
+    assignee: str | None = None,
 ) -> list[dict]:
     conditions: list[str] = []
     params: list[str] = []
@@ -96,6 +97,9 @@ def list_tickets(
     if status is not None:
         conditions.append("status = ?")
         params.append(status)
+    if assignee is not None:
+        conditions.append("EXISTS (SELECT 1 FROM json_each(assignees) WHERE value = ?)")
+        params.append(assignee)
 
     query = "SELECT * FROM tickets"
     if conditions:

@@ -98,7 +98,15 @@
           <option value="1" {% if filters.overdue     %}selected{% endif %}>⚠ Solo vencidos</option>
         </select>
 
-        {% if filters.category or filters.priority or filters.status or filters.overdue %}
+        <select name="assignee" onchange="this.form.submit()"
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="" {% if not filters.assignee %}selected{% endif %}>Todos los asignados</option>
+          {% for name in assignees_options %}
+          <option value="{{ name }}" {% if filters.assignee == name %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+
+        {% if filters.category or filters.priority or filters.status or filters.overdue or filters.assignee %}
         <a href="/" class="text-xs text-gray-400 hover:text-gray-600 underline">Limpiar filtros</a>
         {% endif %}
 

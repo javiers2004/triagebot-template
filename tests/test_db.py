@@ -267,3 +267,27 @@ def test_get_ticket_returns_assignees(database):
     t = db.create_ticket("T", "D", "bug", "P1", [], assignees=["dev1"])
     fetched = db.get_ticket(t["id"])
     assert fetched["assignees"] == ["dev1"]
+
+
+def test_list_filter_assignee(database):
+    db.create_ticket("T1", "D", "bug", "P1", [], assignees=["Técnico"])
+    db.create_ticket("T2", "D", "bug", "P1", [], assignees=["Desarrollador"])
+    results = db.list_tickets(assignee="Técnico")
+    assert len(results) == 1 and results[0]["title"] == "T1"
+
+
+def test_list_filter_assignee_no_match(database):
+    db.create_ticket("T1", "D", "bug", "P1", [], assignees=["Técnico"])
+    assert db.list_tickets(assignee="Tester") == []
+
+
+def test_list_filter_assignee_multi_assigned(database):
+    db.create_ticket("T1", "D", "bug", "P1", [], assignees=["Técnico", "Desarrollador"])
+    assert len(db.list_tickets(assignee="Técnico")) == 1
+    assert len(db.list_tickets(assignee="Desarrollador")) == 1
+
+
+def test_list_filter_assignee_none_returns_all(database):
+    db.create_ticket("T1", "D", "bug", "P1", [], assignees=["Técnico"])
+    db.create_ticket("T2", "D", "bug", "P1", [], assignees=[])
+    assert len(db.list_tickets(assignee=None)) == 2

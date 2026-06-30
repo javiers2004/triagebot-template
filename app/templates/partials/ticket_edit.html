@@ -30,13 +30,16 @@
     </select>
   </td>
   <td class="px-4 py-2">
-    <input
-      type="text"
-      name="assignees"
-      class="edit-field-{{ ticket.id }} px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-      value="{{ ticket.assignees | join(', ') }}"
-      placeholder="nombre1, nombre2..."
-    >
+    <div class="flex flex-col gap-1">
+      {% for name in assignees_options %}
+      <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+        <input type="checkbox" name="assignees" value="{{ name }}"
+          class="edit-field-{{ ticket.id }}"
+          {% if name in ticket.assignees %}checked{% endif %}>
+        {{ name }}
+      </label>
+      {% endfor %}
+    </div>
   </td>
   <td class="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">{{ ticket.created_at[:10] }}</td>
   <td class="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">{{ ticket.due_date[:10] }}</td>

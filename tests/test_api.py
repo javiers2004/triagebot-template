@@ -325,3 +325,20 @@ def test_list_tickets_filter_resolved(client, monkeypatch):
     client.patch(f"/tickets/{tid}", json={"status": "resolved"})
     assert len(client.get("/tickets", params={"status": "resolved"}).json()) == 1
     assert len(client.get("/tickets", params={"status": "open"}).json()) == 0
+
+
+def test_list_tickets_filter_by_assignee(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client, title="Asignado a Técnico").json()["id"]
+    client.patch(f"/tickets/{tid}", json={"assignees": ["Técnico"]})
+    _post(client, title="Sin asignar")
+
+    results = client.get("/tickets", params={"assignee": "Técnico"}).json()
+    assert len(results) == 1 and results[0]["title"] == "Asignado a Técnico"
+
+
+def test_list_tickets_filter_assignee_no_match(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    client.patch(f"/tickets/{tid}", json={"assignees": ["Técnico"]})
+    assert client.get("/tickets", params={"assignee": "Tester"}).json() == []
