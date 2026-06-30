@@ -4,9 +4,9 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 
 _PRIORITY_DEADLINE: dict[str, timedelta] = {
-    "P1": timedelta(hours=4),
-    "P2": timedelta(days=3),
-    "P3": timedelta(days=7),
+    "P1": timedelta(hours=0),
+    "P2": timedelta(days=1),
+    "P3": timedelta(days=2),
 }
 
 _initialized: set[str] = set()
