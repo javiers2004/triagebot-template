@@ -27,9 +27,14 @@
         hx-ext="json-enc"
         hx-swap="none"
         hx-on::after-request="
+          var err = this.querySelector('#form-error');
           if (event.detail.successful) {
             this.reset();
+            err.classList.add('hidden');
             htmx.ajax('GET', '/partials/tickets' + window.location.search, {target: '#ticket-tbody', swap: 'innerHTML'});
+          } else {
+            err.textContent = event.detail.xhr.status === 422 ? 'El título no puede estar vacío ni contener solo espacios.' : 'Error al crear el ticket. Inténtalo de nuevo.';
+            err.classList.remove('hidden');
           }
         "
         class="space-y-3"
@@ -42,6 +47,7 @@
           maxlength="200"
           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
+        <p id="form-error" class="hidden text-xs text-red-600 font-medium"></p>
         <textarea
           name="description"
           placeholder="Describe el problema o petición..."
