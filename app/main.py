@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -52,8 +53,9 @@ def list_tickets(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: bool = False,
 ):
-    return db.list_tickets(category=category, priority=priority, status=status)
+    return db.list_tickets(category=category, priority=priority, status=status, overdue=overdue)
 
 
 @app.patch("/tickets/{ticket_id}", response_model=TicketResponse)
@@ -70,11 +72,18 @@ def tickets_partial(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: bool = False,
 ):
-    tickets = db.list_tickets(category=category or None, priority=priority or None, status=status or None)
+    tickets = db.list_tickets(
+        category=category or None,
+        priority=priority or None,
+        status=status or None,
+        overdue=overdue,
+    )
+    now = datetime.now(UTC).isoformat()
     return templates.TemplateResponse(
         "partials/tickets.html",
-        {"request": request, "tickets": tickets},
+        {"request": request, "tickets": tickets, "now": now},
     )
 
 
@@ -84,13 +93,21 @@ def index(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: bool = False,
 ):
-    tickets = db.list_tickets(category=category or None, priority=priority or None, status=status or None)
+    tickets = db.list_tickets(
+        category=category or None,
+        priority=priority or None,
+        status=status or None,
+        overdue=overdue,
+    )
+    now = datetime.now(UTC).isoformat()
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "tickets": tickets,
-            "filters": {"category": category, "priority": priority, "status": status},
+            "now": now,
+            "filters": {"category": category, "priority": priority, "status": status, "overdue": overdue},
         },
     )

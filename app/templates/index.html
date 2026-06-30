@@ -91,7 +91,13 @@
           <option value="closed"     {% if filters.status == 'closed'      %}selected{% endif %}>Cerrado</option>
         </select>
 
-        {% if filters.category or filters.priority or filters.status %}
+        <select name="overdue" onchange="this.form.submit()"
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value=""  {% if not filters.overdue %}selected{% endif %}>Todos los plazos</option>
+          <option value="1" {% if filters.overdue     %}selected{% endif %}>⚠ Solo vencidos</option>
+        </select>
+
+        {% if filters.category or filters.priority or filters.status or filters.overdue %}
         <a href="/" class="text-xs text-gray-400 hover:text-gray-600 underline">Limpiar filtros</a>
         {% endif %}
 
@@ -113,6 +119,7 @@
             <th class="px-4 py-3">Tags</th>
             <th class="px-4 py-3 w-28">Estado</th>
             <th class="px-4 py-3 w-24">Fecha</th>
+            <th class="px-4 py-3 w-28">Plazo</th>
           </tr>
         </thead>
         <tbody id="ticket-tbody">
