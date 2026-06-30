@@ -48,3 +48,33 @@ def test_classify_ticket_truncates_tags_to_five():
         result = classify_ticket("Title", "Description")
 
     assert len(result["tags"]) <= 5
+
+
+def test_classify_ticket_uses_fallback_on_invalid_priority():
+    bad = {"category": "bug", "priority": "P4", "tags": []}
+
+    with patch("httpx.post", return_value=_mock_response(bad)):
+        result = classify_ticket("Title", "Description")
+
+    assert result == FALLBACK_CLASSIFICATION
+
+
+def test_classify_ticket_handles_non_list_tags():
+    payload = {"category": "question", "priority": "P3", "tags": "important"}
+
+    with patch("httpx.post", return_value=_mock_response(payload)):
+        result = classify_ticket("Title", "Description")
+
+    assert result["tags"] == []
+
+
+def test_classify_ticket_uses_fallback_on_malformed_json():
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = {"choices": [{"message": {"content": "esto no es json {"}}]}
+    response.raise_for_status = MagicMock()
+
+    with patch("httpx.post", return_value=response):
+        result = classify_ticket("Title", "Description")
+
+    assert result == FALLBACK_CLASSIFICATION
