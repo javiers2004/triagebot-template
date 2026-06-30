@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app import classifier, db
-from app.models import ASSIGNEES, TicketCreate, TicketResponse, TicketUpdate
+from app.models import TicketCreate, TicketResponse, TicketUpdate
 
 _ALLOWED_STATUSES = {"open", "in_progress", "resolved", "closed"}
 _ALLOWED_PRIORITIES = {"P1", "P2", "P3"}
@@ -121,7 +121,7 @@ def ticket_edit_row(request: Request, ticket_id: int):
         raise HTTPException(status_code=404, detail="Ticket not found")
     return templates.TemplateResponse(
         "partials/ticket_edit.html",
-        {"request": request, "ticket": ticket, "assignees_options": ASSIGNEES},
+        {"request": request, "ticket": ticket},
     )
 
 
@@ -131,11 +131,12 @@ def patch_ticket_html(
     ticket_id: int,
     status: str | None = Form(None),
     priority: str | None = Form(None),
-    assignees: list[str] = Form(default=[]),  # noqa: B008
+    assignees: str | None = Form(None),
 ):
     valid_status = status if status in _ALLOWED_STATUSES else None
     valid_priority = priority if priority in _ALLOWED_PRIORITIES else None
-    ticket = db.update_ticket(ticket_id, status=valid_status, priority=valid_priority, assignees=assignees)
+    assignee_list = [a.strip() for a in (assignees or "").split(",") if a.strip()]
+    ticket = db.update_ticket(ticket_id, status=valid_status, priority=valid_priority, assignees=assignee_list)
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
     now = datetime.now(UTC).isoformat()
@@ -172,6 +173,5 @@ def index(
                 "overdue": overdue,
                 "assignee": assignee,
             },
-            "assignees_options": ASSIGNEES,
         },
     )
