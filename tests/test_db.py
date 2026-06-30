@@ -210,3 +210,60 @@ def test_update_visible_in_list(database):
     closed_list = db.list_tickets(status="closed")
     assert all(x["id"] != t["id"] for x in open_list)
     assert any(x["id"] == t["id"] for x in closed_list)
+
+
+def test_update_status_resolved(database):
+    t = _create()
+    updated = db.update_ticket(t["id"], status="resolved")
+    assert updated["status"] == "resolved"
+
+
+def test_list_filter_status_resolved(database):
+    t = _create()
+    db.update_ticket(t["id"], status="resolved")
+    assert len(db.list_tickets(status="resolved")) == 1
+    assert db.list_tickets(status="open") == []
+
+
+# ---------------------------------------------------------------------------
+# assignees
+# ---------------------------------------------------------------------------
+
+
+def test_create_default_assignees_empty(database):
+    assert _create()["assignees"] == []
+
+
+def test_create_with_assignees(database):
+    t = db.create_ticket("T", "D", "bug", "P1", [], assignees=["alice", "bob"])
+    assert t["assignees"] == ["alice", "bob"]
+
+
+def test_update_assignees(database):
+    t = _create()
+    updated = db.update_ticket(t["id"], assignees=["alice"])
+    assert updated["assignees"] == ["alice"]
+
+
+def test_update_assignees_empty_list(database):
+    t = db.create_ticket("T", "D", "bug", "P1", [], assignees=["alice"])
+    updated = db.update_ticket(t["id"], assignees=[])
+    assert updated["assignees"] == []
+
+
+def test_update_assignees_multiple(database):
+    t = _create()
+    updated = db.update_ticket(t["id"], assignees=["alice", "bob", "carlos"])
+    assert updated["assignees"] == ["alice", "bob", "carlos"]
+
+
+def test_update_assignees_none_does_not_clear(database):
+    t = db.create_ticket("T", "D", "bug", "P1", [], assignees=["alice"])
+    updated = db.update_ticket(t["id"], assignees=None)
+    assert updated["assignees"] == ["alice"]
+
+
+def test_get_ticket_returns_assignees(database):
+    t = db.create_ticket("T", "D", "bug", "P1", [], assignees=["dev1"])
+    fetched = db.get_ticket(t["id"])
+    assert fetched["assignees"] == ["dev1"]

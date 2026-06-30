@@ -275,7 +275,7 @@ def test_patch_title_not_modified(client, monkeypatch):
     assert data["title"] == "Sin cambios"
 
 
-@pytest.mark.parametrize("status", ["open", "in_progress", "closed"])
+@pytest.mark.parametrize("status", ["open", "in_progress", "resolved", "closed"])
 def test_patch_all_valid_statuses(client, monkeypatch, status):
     monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
     tid = _post(client).json()["id"]
@@ -289,3 +289,39 @@ def test_patch_all_valid_priorities(client, monkeypatch, priority):
     tid = _post(client).json()["id"]
     data = client.patch(f"/tickets/{tid}", json={"priority": priority}).json()
     assert data["priority"] == priority
+
+
+def test_patch_assignees(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    data = client.patch(f"/tickets/{tid}", json={"assignees": ["alice", "bob"]}).json()
+    assert data["assignees"] == ["alice", "bob"]
+
+
+def test_patch_assignees_empty_list(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    client.patch(f"/tickets/{tid}", json={"assignees": ["alice"]})
+    data = client.patch(f"/tickets/{tid}", json={"assignees": []}).json()
+    assert data["assignees"] == []
+
+
+def test_post_ticket_default_assignees_empty(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    data = _post(client).json()
+    assert data["assignees"] == []
+
+
+def test_patch_resolved_status(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    data = client.patch(f"/tickets/{tid}", json={"status": "resolved"}).json()
+    assert data["status"] == "resolved"
+
+
+def test_list_tickets_filter_resolved(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    client.patch(f"/tickets/{tid}", json={"status": "resolved"})
+    assert len(client.get("/tickets", params={"status": "resolved"}).json()) == 1
+    assert len(client.get("/tickets", params={"status": "open"}).json()) == 0

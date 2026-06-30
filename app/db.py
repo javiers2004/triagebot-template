@@ -19,6 +19,7 @@ _CREATE_TABLE = """
         category TEXT NOT NULL,
         priority TEXT NOT NULL,
         tags TEXT NOT NULL DEFAULT '[]',
+        assignees TEXT NOT NULL DEFAULT '[]',
         status TEXT NOT NULL DEFAULT 'open',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
@@ -43,20 +44,29 @@ def get_connection() -> sqlite3.Connection:
 
 
 def init_db() -> None:
-    with get_connection():
-        pass
+    with get_connection() as conn:
+        try:
+            conn.execute("ALTER TABLE tickets ADD COLUMN assignees TEXT NOT NULL DEFAULT '[]'")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
 
 def create_ticket(
-    title: str, description: str, category: str, priority: str, tags: list[str]
+    title: str,
+    description: str,
+    category: str,
+    priority: str,
+    tags: list[str],
+    assignees: list[str] | None = None,
 ) -> dict:
     now = datetime.now(UTC).isoformat()
     with get_connection() as conn:
         cursor = conn.execute(
             """INSERT INTO tickets
-               (title, description, category, priority, tags, status, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, 'open', ?, ?)""",
-            (title, description, category, priority, json.dumps(tags), now, now),
+               (title, description, category, priority, tags, assignees, status, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)""",
+            (title, description, category, priority, json.dumps(tags), json.dumps(assignees or []), now, now),
         )
         conn.commit()
         ticket_id = cursor.lastrowid
@@ -105,6 +115,7 @@ def update_ticket(
     ticket_id: int,
     status: str | None = None,
     priority: str | None = None,
+    assignees: list[str] | None = None,
 ) -> dict | None:
     updates: list[str] = []
     params: list = []
@@ -114,6 +125,9 @@ def update_ticket(
     if priority is not None:
         updates.append("priority = ?")
         params.append(priority)
+    if assignees is not None:
+        updates.append("assignees = ?")
+        params.append(json.dumps(assignees))
 
     if not updates:
         return get_ticket(ticket_id)
@@ -132,6 +146,7 @@ def update_ticket(
 def _row_to_dict(row: sqlite3.Row) -> dict:
     d = dict(row)
     d["tags"] = json.loads(d["tags"])
+    d["assignees"] = json.loads(d.get("assignees") or "[]")
     created = datetime.fromisoformat(d["created_at"])
     if created.tzinfo is None:
         created = created.replace(tzinfo=UTC)

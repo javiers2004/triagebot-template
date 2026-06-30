@@ -88,6 +88,7 @@
           <option value=""           {% if not filters.status                          %}selected{% endif %}>Todos los estados</option>
           <option value="open"       {% if filters.status == 'open'        %}selected{% endif %}>Abierto</option>
           <option value="in_progress"{% if filters.status == 'in_progress' %}selected{% endif %}>En progreso</option>
+          <option value="resolved"   {% if filters.status == 'resolved'    %}selected{% endif %}>Resuelto</option>
           <option value="closed"     {% if filters.status == 'closed'      %}selected{% endif %}>Cerrado</option>
         </select>
 
@@ -118,8 +119,10 @@
             <th class="px-4 py-3 w-24">Prioridad</th>
             <th class="px-4 py-3">Tags</th>
             <th class="px-4 py-3 w-28">Estado</th>
+            <th class="px-4 py-3">Asignados</th>
             <th class="px-4 py-3 w-24">Fecha</th>
             <th class="px-4 py-3 w-28">Plazo</th>
+            <th class="px-4 py-3 w-20"></th>
           </tr>
         </thead>
         <tbody id="ticket-tbody">

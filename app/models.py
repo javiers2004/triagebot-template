@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 
 ALLOWED_CATEGORIES = {"bug", "feature_request", "question", "urgent"}
 ALLOWED_PRIORITIES = {"P1", "P2", "P3"}
-ALLOWED_STATUSES = {"open", "in_progress", "closed"}
+ALLOWED_STATUSES = {"open", "in_progress", "resolved", "closed"}
 
 
 class TicketCreate(BaseModel):
@@ -35,6 +35,7 @@ class TicketCreate(BaseModel):
 class TicketUpdate(BaseModel):
     status: str | None = None
     priority: str | None = None
+    assignees: list[str] | None = None
 
     @field_validator("status")
     @classmethod
@@ -58,6 +59,7 @@ class TicketResponse(BaseModel):
     category: str
     priority: str
     tags: list[str]
+    assignees: list[str]
     status: str
     created_at: datetime
     updated_at: datetime
