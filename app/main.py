@@ -55,6 +55,11 @@ def create_ticket(payload: TicketCreate):
     return ticket
 
 
+@app.get("/tickets/stats")
+def ticket_stats() -> dict:
+    return db.get_stats()
+
+
 @app.get("/tickets", response_model=list[TicketResponse])
 def list_tickets(
     category: str | None = None,

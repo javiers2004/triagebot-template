@@ -436,6 +436,47 @@ def test_partials_filter_assignee_no_match_shows_empty(client, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# GET /tickets/stats
+# ---------------------------------------------------------------------------
+
+
+def test_stats_empty_db(client):
+    r = client.get("/tickets/stats")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["by_category"] == {"bug": 0, "feature_request": 0, "question": 0, "urgent": 0}
+    assert data["by_priority"] == {"P1": 0, "P2": 0, "P3": 0}
+    assert data["by_status"] == {"open": 0, "in_progress": 0, "resolved": 0, "closed": 0}
+
+
+def test_stats_counts_by_category(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake(category="bug"))
+    _post(client, title="Bug 1")
+    _post(client, title="Bug 2")
+    data = client.get("/tickets/stats").json()
+    assert data["by_category"]["bug"] == 2
+    assert data["by_category"]["question"] == 0
+
+
+def test_stats_counts_by_priority(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake(priority="P1"))
+    _post(client, title="P1 ticket")
+    data = client.get("/tickets/stats").json()
+    assert data["by_priority"]["P1"] == 1
+    assert data["by_priority"]["P2"] == 0
+    assert data["by_priority"]["P3"] == 0
+
+
+def test_stats_counts_by_status(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client, title="Status test").json()["id"]
+    client.patch(f"/tickets/{tid}", json={"status": "resolved"})
+    data = client.get("/tickets/stats").json()
+    assert data["by_status"]["resolved"] == 1
+    assert data["by_status"]["open"] == 0
+
+
+# ---------------------------------------------------------------------------
 # GET / — filtro por asignado en la página principal
 # ---------------------------------------------------------------------------
 
