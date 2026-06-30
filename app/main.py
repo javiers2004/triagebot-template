@@ -53,9 +53,9 @@ def list_tickets(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
-    overdue: bool = False,
+    overdue: str | None = None,
 ):
-    return db.list_tickets(category=category, priority=priority, status=status, overdue=overdue)
+    return db.list_tickets(category=category, priority=priority, status=status, overdue=overdue == "1")
 
 
 @app.patch("/tickets/{ticket_id}", response_model=TicketResponse)
@@ -72,13 +72,13 @@ def tickets_partial(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
-    overdue: bool = False,
+    overdue: str | None = None,
 ):
     tickets = db.list_tickets(
         category=category or None,
         priority=priority or None,
         status=status or None,
-        overdue=overdue,
+        overdue=overdue == "1",
     )
     now = datetime.now(UTC).isoformat()
     return templates.TemplateResponse(
@@ -93,13 +93,13 @@ def index(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
-    overdue: bool = False,
+    overdue: str | None = None,
 ):
     tickets = db.list_tickets(
         category=category or None,
         priority=priority or None,
         status=status or None,
-        overdue=overdue,
+        overdue=overdue == "1",
     )
     now = datetime.now(UTC).isoformat()
     return templates.TemplateResponse(
