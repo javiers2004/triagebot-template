@@ -1,10 +1,11 @@
 import json
 import os
 import sqlite3
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 
 _PRIORITY_DEADLINE: dict[str, timedelta] = {
-    "P1": timedelta(hours=0),
+    "P1": timedelta(hours=4),
     "P2": timedelta(days=1),
     "P3": timedelta(days=2),
 }
@@ -32,7 +33,8 @@ def _db_path() -> str:
     return url.removeprefix("sqlite:///")
 
 
-def get_connection() -> sqlite3.Connection:
+@contextmanager
+def get_connection():
     path = _db_path()
     conn = sqlite3.connect(path, check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL")
@@ -44,7 +46,10 @@ def get_connection() -> sqlite3.Connection:
         )
         conn.commit()
         _initialized.add(path)
-    return conn
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def init_db() -> None:
@@ -81,7 +86,9 @@ def create_ticket(
             ticket_id = cursor.lastrowid
     except sqlite3.IntegrityError as err:
         raise DuplicateTicketError("A ticket with this title and description already exists") from err
-    return get_ticket(ticket_id)
+    ticket = get_ticket(ticket_id)
+    assert ticket is not None
+    return ticket
 
 
 def get_ticket(ticket_id: int) -> dict | None:

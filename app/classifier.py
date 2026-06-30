@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import httpx
@@ -20,12 +21,17 @@ _SYSTEM_PROMPT = (
 _USER_PROMPT = "Title: {title}\nDescription: {description}"
 
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-_MODEL = "openai/gpt-4o-mini"
+_MODEL = "openai/gpt-oss-120b"
+
+_log = logging.getLogger(__name__)
 
 
 def classify_ticket(title: str, description: str) -> dict:
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        if not api_key:
+            _log.warning("OPENROUTER_API_KEY no está definida; usando clasificación de fallback")
+            return FALLBACK_CLASSIFICATION
         response = httpx.post(
             _OPENROUTER_URL,
             headers={

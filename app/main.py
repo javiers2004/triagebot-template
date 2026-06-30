@@ -26,13 +26,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="TriageBot", lifespan=lifespan)
 
+_FALLBACK = {"category": "question", "priority": "P3", "tags": []}
+
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
-
-_FALLBACK = {"category": "question", "priority": "P3", "tags": []}
 
 
 @app.post("/tickets", response_model=TicketResponse, status_code=201)
