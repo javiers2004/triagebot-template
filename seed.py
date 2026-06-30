@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).parent))
-from app.classifier import classify_ticket
+from app.classifier import classify_ticket  # noqa: E402
 
 tickets = json.loads(Path("seed_tickets.json").read_text(encoding="utf-8"))
 
