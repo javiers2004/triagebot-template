@@ -1,7 +1,13 @@
 import json
 import os
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+
+_PRIORITY_DEADLINE: dict[str, timedelta] = {
+    "P1": timedelta(hours=0),
+    "P2": timedelta(days=1),
+    "P3": timedelta(days=2),
+}
 
 _initialized: set[str] = set()
 
@@ -77,6 +83,7 @@ def list_tickets(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: bool = False,
 ) -> list[dict]:
     conditions: list[str] = []
     params: list[str] = []
@@ -97,7 +104,11 @@ def list_tickets(
 
     with get_connection() as conn:
         rows = conn.execute(query, params).fetchall()
-    return [_row_to_dict(r) for r in rows]
+    tickets = [_row_to_dict(r) for r in rows]
+    if overdue:
+        now = datetime.now(UTC).isoformat()
+        tickets = [t for t in tickets if t["due_date"] <= now]
+    return tickets
 
 
 def update_ticket(
@@ -136,4 +147,9 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
     d = dict(row)
     d["tags"] = json.loads(d["tags"])
     d["assignees"] = json.loads(d.get("assignees") or "[]")
+    created = datetime.fromisoformat(d["created_at"])
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=UTC)
+    offset = _PRIORITY_DEADLINE.get(d["priority"], timedelta(days=7))
+    d["due_date"] = (created + offset).isoformat()
     return d

@@ -39,6 +39,7 @@
     >
   </td>
   <td class="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">{{ ticket.created_at[:10] }}</td>
+  <td class="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">{{ ticket.due_date[:10] }}</td>
   <td class="px-4 py-2 flex gap-1 items-center">
     <button
       hx-patch="/partials/tickets/{{ ticket.id }}"

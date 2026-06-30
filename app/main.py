@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, HTTPException
@@ -56,8 +57,9 @@ def list_tickets(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: str | None = None,
 ):
-    return db.list_tickets(category=category, priority=priority, status=status)
+    return db.list_tickets(category=category, priority=priority, status=status, overdue=overdue == "1")
 
 
 @app.patch("/tickets/{ticket_id}", response_model=TicketResponse)
@@ -79,11 +81,18 @@ def tickets_partial(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: str | None = None,
 ):
-    tickets = db.list_tickets(category=category or None, priority=priority or None, status=status or None)
+    tickets = db.list_tickets(
+        category=category or None,
+        priority=priority or None,
+        status=status or None,
+        overdue=overdue == "1",
+    )
+    now = datetime.now(UTC).isoformat()
     return templates.TemplateResponse(
         "partials/tickets.html",
-        {"request": request, "tickets": tickets},
+        {"request": request, "tickets": tickets, "now": now},
     )
 
 
@@ -92,7 +101,8 @@ def ticket_row(request: Request, ticket_id: int):
     ticket = db.get_ticket(ticket_id)
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
-    return templates.TemplateResponse("partials/ticket_row.html", {"request": request, "ticket": ticket})
+    now = datetime.now(UTC).isoformat()
+    return templates.TemplateResponse("partials/ticket_row.html", {"request": request, "ticket": ticket, "now": now})
 
 
 @app.get("/partials/tickets/{ticket_id}/edit", response_class=HTMLResponse)
@@ -117,7 +127,8 @@ def patch_ticket_html(
     ticket = db.update_ticket(ticket_id, status=valid_status, priority=valid_priority, assignees=assignee_list)
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
-    return templates.TemplateResponse("partials/ticket_row.html", {"request": request, "ticket": ticket})
+    now = datetime.now(UTC).isoformat()
+    return templates.TemplateResponse("partials/ticket_row.html", {"request": request, "ticket": ticket, "now": now})
 
 
 @app.get("/")
@@ -126,13 +137,21 @@ def index(
     category: str | None = None,
     priority: str | None = None,
     status: str | None = None,
+    overdue: str | None = None,
 ):
-    tickets = db.list_tickets(category=category or None, priority=priority or None, status=status or None)
+    tickets = db.list_tickets(
+        category=category or None,
+        priority=priority or None,
+        status=status or None,
+        overdue=overdue == "1",
+    )
+    now = datetime.now(UTC).isoformat()
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "tickets": tickets,
-            "filters": {"category": category, "priority": priority, "status": status},
+            "now": now,
+            "filters": {"category": category, "priority": priority, "status": status, "overdue": overdue},
         },
     )

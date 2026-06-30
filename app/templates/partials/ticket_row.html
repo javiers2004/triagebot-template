@@ -36,6 +36,13 @@
   </td>
   <td class="px-4 py-3 text-xs text-gray-500">{{ ticket.assignees | join(', ') if ticket.assignees else '—' }}</td>
   <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{{ ticket.created_at[:10] }}</td>
+  <td class="px-4 py-3 text-xs whitespace-nowrap">
+    {% if now is defined and ticket.due_date < now %}
+      <span class="font-semibold text-red-600">⚠ {{ ticket.due_date[:10] }}</span>
+    {% else %}
+      <span class="text-gray-400">{{ ticket.due_date[:10] }}</span>
+    {% endif %}
+  </td>
   <td class="px-4 py-3">
     <button
       hx-get="/partials/tickets/{{ ticket.id }}/edit"
