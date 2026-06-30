@@ -7,6 +7,7 @@
 {% set status_colors = {
   'open':        'bg-sky-100 text-sky-800',
   'in_progress': 'bg-yellow-100 text-yellow-800',
+  'resolved':    'bg-green-100 text-green-700',
   'closed':      'bg-gray-100 text-gray-500'
 } %}
 
@@ -33,6 +34,7 @@
       {{ ticket.status }}
     </span>
   </td>
+  <td class="px-4 py-3 text-xs text-gray-500">{{ ticket.assignees | join(', ') if ticket.assignees else '—' }}</td>
   <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{{ ticket.created_at[:10] }}</td>
   <td class="px-4 py-3">
     <button

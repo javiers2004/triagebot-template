@@ -81,7 +81,7 @@ def test_description_5001_chars_raises():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("status", ["open", "in_progress", "closed"])
+@pytest.mark.parametrize("status", ["open", "in_progress", "resolved", "closed"])
 def test_update_all_valid_statuses(status):
     u = TicketUpdate(status=status)
     assert u.status == status
@@ -128,3 +128,33 @@ def test_update_both_fields_valid():
     u = TicketUpdate(status="closed", priority="P2")
     assert u.status == "closed"
     assert u.priority == "P2"
+
+
+# ---------------------------------------------------------------------------
+# TicketUpdate — assignees
+# ---------------------------------------------------------------------------
+
+
+def test_update_assignees_list():
+    u = TicketUpdate(assignees=["alice", "bob"])
+    assert u.assignees == ["alice", "bob"]
+
+
+def test_update_assignees_empty_list():
+    u = TicketUpdate(assignees=[])
+    assert u.assignees == []
+
+
+def test_update_assignees_none_is_valid():
+    u = TicketUpdate(assignees=None)
+    assert u.assignees is None
+
+
+def test_update_assignees_single():
+    u = TicketUpdate(assignees=["alice"])
+    assert u.assignees == ["alice"]
+
+
+def test_update_resolved_status():
+    u = TicketUpdate(status="resolved")
+    assert u.status == "resolved"
