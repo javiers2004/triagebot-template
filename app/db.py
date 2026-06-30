@@ -34,10 +34,14 @@ def _db_path() -> str:
 
 def get_connection() -> sqlite3.Connection:
     path = _db_path()
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
     if path not in _initialized:
         conn.execute(_CREATE_TABLE)
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_tickets_title_desc ON tickets(title, description)"
+        )
         conn.commit()
         _initialized.add(path)
     return conn
@@ -52,6 +56,10 @@ def init_db() -> None:
             pass  # Column already exists
 
 
+class DuplicateTicketError(Exception):
+    pass
+
+
 def create_ticket(
     title: str,
     description: str,
@@ -61,15 +69,18 @@ def create_ticket(
     assignees: list[str] | None = None,
 ) -> dict:
     now = datetime.now(UTC).isoformat()
-    with get_connection() as conn:
-        cursor = conn.execute(
-            """INSERT INTO tickets
-               (title, description, category, priority, tags, assignees, status, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)""",
-            (title, description, category, priority, json.dumps(tags), json.dumps(assignees or []), now, now),
-        )
-        conn.commit()
-        ticket_id = cursor.lastrowid
+    try:
+        with get_connection() as conn:
+            cursor = conn.execute(
+                """INSERT INTO tickets
+                   (title, description, category, priority, tags, assignees, status, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)""",
+                (title, description, category, priority, json.dumps(tags), json.dumps(assignees or []), now, now),
+            )
+            conn.commit()
+            ticket_id = cursor.lastrowid
+    except sqlite3.IntegrityError:
+        raise DuplicateTicketError(f"A ticket with this title and description already exists")
     return get_ticket(ticket_id)
 
 

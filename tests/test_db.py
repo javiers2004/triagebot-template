@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 
 from app import db
@@ -9,8 +11,12 @@ def database(tmp_path, monkeypatch):
     db.init_db()
 
 
-def _create(title="Título", description="Desc", category="bug", priority="P1", tags=None):
-    return db.create_ticket(title, description, category, priority, tags or [])
+_counter = itertools.count(1)
+
+
+def _create(title=None, description="Desc", category="bug", priority="P1", tags=None):
+    t = title if title is not None else f"Título {next(_counter)}"
+    return db.create_ticket(t, description, category, priority, tags or [])
 
 
 # ---------------------------------------------------------------------------

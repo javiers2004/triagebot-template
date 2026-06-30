@@ -42,13 +42,16 @@ def create_ticket(payload: TicketCreate):
     except Exception:
         classification = _FALLBACK
 
-    ticket = db.create_ticket(
-        title=payload.title,
-        description=payload.description,
-        category=classification["category"],
-        priority=classification["priority"],
-        tags=classification["tags"],
-    )
+    try:
+        ticket = db.create_ticket(
+            title=payload.title,
+            description=payload.description,
+            category=classification["category"],
+            priority=classification["priority"],
+            tags=classification["tags"],
+        )
+    except db.DuplicateTicketError:
+        raise HTTPException(status_code=409, detail="A ticket with this title and description already exists")
     return ticket
 
 
@@ -133,10 +136,12 @@ def patch_ticket_html(
     priority: str | None = Form(None),
     assignees: str | None = Form(None),
 ):
-    valid_status = status if status in _ALLOWED_STATUSES else None
-    valid_priority = priority if priority in _ALLOWED_PRIORITIES else None
+    if status is not None and status not in _ALLOWED_STATUSES:
+        raise HTTPException(status_code=422, detail=f"status must be one of {_ALLOWED_STATUSES}")
+    if priority is not None and priority not in _ALLOWED_PRIORITIES:
+        raise HTTPException(status_code=422, detail=f"priority must be one of {_ALLOWED_PRIORITIES}")
     assignee_list = [a.strip() for a in (assignees or "").split(",") if a.strip()]
-    ticket = db.update_ticket(ticket_id, status=valid_status, priority=valid_priority, assignees=assignee_list)
+    ticket = db.update_ticket(ticket_id, status=status, priority=priority, assignees=assignee_list)
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
     now = datetime.now(UTC).isoformat()

@@ -119,8 +119,15 @@ def test_post_ticket_created_equals_updated_on_creation(client, monkeypatch):
 
 def test_post_ticket_ids_are_unique(client, monkeypatch):
     monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
-    ids = [_post(client).json()["id"] for _ in range(5)]
+    ids = [_post(client, title=f"Ticket único {i}").json()["id"] for i in range(5)]
     assert len(set(ids)) == 5
+
+
+def test_post_duplicate_ticket_returns_409(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    _post(client)
+    r = _post(client)
+    assert r.status_code == 409
 
 
 # ---------------------------------------------------------------------------
