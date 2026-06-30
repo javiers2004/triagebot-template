@@ -96,6 +96,6 @@ Los detalles obligatorios están en:
 
 ## Equipo 5
 
-Nombres: Javier Santamaría
+Nombres: Javier Santamaría, Jon Ruiz
 
 Metodología: `Vibe` 
