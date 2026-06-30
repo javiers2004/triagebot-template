@@ -2,6 +2,10 @@ from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+
+load_dotenv()
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 
