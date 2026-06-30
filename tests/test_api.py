@@ -342,3 +342,102 @@ def test_list_tickets_filter_assignee_no_match(client, monkeypatch):
     tid = _post(client).json()["id"]
     client.patch(f"/tickets/{tid}", json={"assignees": ["Técnico"]})
     assert client.get("/tickets", params={"assignee": "Tester"}).json() == []
+
+
+# ---------------------------------------------------------------------------
+# PATCH /partials/tickets/{id}  — form endpoint (HTML)
+# ---------------------------------------------------------------------------
+
+
+def test_html_patch_returns_html(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    r = client.patch(f"/partials/tickets/{tid}", data={"status": "open"})
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+
+
+def test_html_patch_assignees_comma_separated(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    r = client.patch(f"/partials/tickets/{tid}", data={"assignees": "Alice, Bob"})
+    assert r.status_code == 200
+    assert "Alice" in r.text
+    assert "Bob" in r.text
+
+
+def test_html_patch_assignees_single(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    r = client.patch(f"/partials/tickets/{tid}", data={"assignees": "Alice"})
+    assert "Alice" in r.text
+
+
+def test_html_patch_assignees_cleared_by_empty(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    client.patch(f"/partials/tickets/{tid}", data={"assignees": "Alice"})
+    r = client.patch(f"/partials/tickets/{tid}", data={"assignees": ""})
+    assert "Alice" not in r.text
+
+
+def test_html_patch_assignees_strips_whitespace(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    r = client.patch(f"/partials/tickets/{tid}", data={"assignees": "  Alice  ,  Bob  "})
+    assert "Alice" in r.text
+    assert "Bob" in r.text
+
+
+def test_html_patch_status_resolved(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    r = client.patch(f"/partials/tickets/{tid}", data={"status": "resolved"})
+    assert "resolved" in r.text
+
+
+def test_html_patch_nonexistent_returns_404(client):
+    r = client.patch("/partials/tickets/9999", data={"status": "open"})
+    assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# GET /partials/tickets — filtro por asignado (HTML)
+# ---------------------------------------------------------------------------
+
+
+def test_partials_filter_by_assignee(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client, title="Ticket asignado").json()["id"]
+    client.patch(f"/tickets/{tid}", json={"assignees": ["Alice"]})
+    _post(client, title="Sin asignar")
+
+    r = client.get("/partials/tickets", params={"assignee": "Alice"})
+    assert r.status_code == 200
+    assert "Ticket asignado" in r.text
+    assert "Sin asignar" not in r.text
+
+
+def test_partials_filter_assignee_no_match_shows_empty(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client).json()["id"]
+    client.patch(f"/tickets/{tid}", json={"assignees": ["Alice"]})
+
+    r = client.get("/partials/tickets", params={"assignee": "Bob"})
+    assert r.status_code == 200
+    assert "No hay tickets" in r.text
+
+
+# ---------------------------------------------------------------------------
+# GET / — filtro por asignado en la página principal
+# ---------------------------------------------------------------------------
+
+
+def test_index_filter_by_assignee_returns_html(client, monkeypatch):
+    monkeypatch.setattr("app.classifier.classify_ticket", lambda *_: _fake())
+    tid = _post(client, title="Asignado").json()["id"]
+    client.patch(f"/tickets/{tid}", json={"assignees": ["Alice"]})
+
+    r = client.get("/", params={"assignee": "Alice"})
+    assert r.status_code == 200
+    assert "Asignado" in r.text
