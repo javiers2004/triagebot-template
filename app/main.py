@@ -1,12 +1,16 @@
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Form, HTTPException
 from fastapi.requests import Request
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app import classifier, db
 from app.models import TicketCreate, TicketResponse, TicketUpdate
+
+_ALLOWED_STATUSES = {"open", "in_progress", "closed"}
+_ALLOWED_PRIORITIES = {"P1", "P2", "P3"}
 
 load_dotenv()
 
@@ -76,6 +80,37 @@ def tickets_partial(
         "partials/tickets.html",
         {"request": request, "tickets": tickets},
     )
+
+
+@app.get("/partials/tickets/{ticket_id}", response_class=HTMLResponse)
+def ticket_row(request: Request, ticket_id: int):
+    ticket = db.get_ticket(ticket_id)
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    return templates.TemplateResponse("partials/ticket_row.html", {"request": request, "ticket": ticket})
+
+
+@app.get("/partials/tickets/{ticket_id}/edit", response_class=HTMLResponse)
+def ticket_edit_row(request: Request, ticket_id: int):
+    ticket = db.get_ticket(ticket_id)
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    return templates.TemplateResponse("partials/ticket_edit.html", {"request": request, "ticket": ticket})
+
+
+@app.patch("/partials/tickets/{ticket_id}", response_class=HTMLResponse)
+def patch_ticket_html(
+    request: Request,
+    ticket_id: int,
+    status: str | None = Form(None),
+    priority: str | None = Form(None),
+):
+    valid_status = status if status in _ALLOWED_STATUSES else None
+    valid_priority = priority if priority in _ALLOWED_PRIORITIES else None
+    ticket = db.update_ticket(ticket_id, status=valid_status, priority=valid_priority)
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    return templates.TemplateResponse("partials/ticket_row.html", {"request": request, "ticket": ticket})
 
 
 @app.get("/")

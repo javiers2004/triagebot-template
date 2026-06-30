@@ -1,45 +1,9 @@
-{% set cat_colors = {
-  'bug':             'bg-red-100 text-red-800',
-  'feature_request': 'bg-blue-100 text-blue-800',
-  'question':        'bg-gray-100 text-gray-700',
-  'urgent':          'bg-orange-100 text-orange-800'
-} %}
-{% set status_colors = {
-  'open':        'bg-sky-100 text-sky-800',
-  'in_progress': 'bg-yellow-100 text-yellow-800',
-  'closed':      'bg-gray-100 text-gray-500'
-} %}
-
 {% if tickets %}
   {% for ticket in tickets %}
-  <tr class="border-b hover:bg-gray-50 transition-colors {% if ticket.priority == 'P1' %}bg-red-50{% endif %}">
-    <td class="px-4 py-3 text-sm text-gray-400 font-mono">#{{ ticket.id }}</td>
-    <td class="px-4 py-3 text-sm font-medium text-gray-900 max-w-xs truncate" title="{{ ticket.title }}">{{ ticket.title }}</td>
-    <td class="px-4 py-3">
-      <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ cat_colors.get(ticket.category, 'bg-gray-100 text-gray-700') }}">
-        {{ ticket.category }}
-      </span>
-    </td>
-    <td class="px-4 py-3">
-      {% if ticket.priority == 'P1' %}
-        <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white ring-2 ring-red-300">P1</span>
-      {% elif ticket.priority == 'P2' %}
-        <span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-500 text-white">P2</span>
-      {% else %}
-        <span class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">P3</span>
-      {% endif %}
-    </td>
-    <td class="px-4 py-3 text-xs text-gray-500">{{ ticket.tags | join(', ') if ticket.tags else '—' }}</td>
-    <td class="px-4 py-3">
-      <span class="px-2 py-0.5 rounded text-xs font-medium {{ status_colors.get(ticket.status, 'bg-gray-100 text-gray-700') }}">
-        {{ ticket.status }}
-      </span>
-    </td>
-    <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{{ ticket.created_at[:10] }}</td>
-  </tr>
+    {% include "partials/ticket_row.html" %}
   {% endfor %}
 {% else %}
   <tr>
-    <td colspan="7" class="px-4 py-12 text-center text-gray-400 text-sm">No hay tickets con los filtros actuales.</td>
+    <td colspan="8" class="px-4 py-12 text-center text-gray-400 text-sm">No hay tickets con los filtros actuales.</td>
   </tr>
 {% endif %}
